@@ -20,7 +20,14 @@ class FretesEndpoint(@Inject val repository: FreteRepository) : FretesGrpcServic
             return
         }
 
-        val frete = repository.findByCep(request.cep.replace("[^0-9]".toRegex(), ""))
+        if (!request.cep.matches("[0-9]{8}".toRegex())) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                        .withDescription("CEP com formato inválido. Formato esperado: 99999999")
+                        .asRuntimeException())
+            return
+        }
+
+        val frete = repository.findByCep(request.cep)
         if (frete == null) {
             responseObserver.onError(Status.FAILED_PRECONDITION
                         .withDescription("CEP inválido ou não encontrado")

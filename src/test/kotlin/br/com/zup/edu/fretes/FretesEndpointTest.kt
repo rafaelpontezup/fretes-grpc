@@ -30,7 +30,7 @@ class FretesEndpointTest(
     }
 
     @Test
-    fun `deve calcular frete para um CEP sem mascara`() {
+    fun `deve calcular frete para um CEP valido`() {
 
         // cenário
         repository.save(Frete("60325010", BigDecimal("57.91")))
@@ -50,27 +50,7 @@ class FretesEndpointTest(
     }
 
     @Test
-    fun `deve calcular frete para um CEP com mascara`() {
-
-        // cenário
-        repository.save(Frete("60325010", BigDecimal("57.91")))
-        repository.save(Frete("61760000", BigDecimal("21.89")))
-        repository.save(Frete("60711180", BigDecimal("138.14")))
-
-        // ação
-        val response = grpcClient.calcula(
-            FreteRequest.newBuilder().setCep("61.760-000").build()
-        )
-
-        // validação
-        with(response) {
-            assertEquals("61760000", cep)
-            assertEquals(21.89, valor)
-        }
-    }
-
-    @Test
-    fun `nao deve calcular CEP quando numero nao informado`() {
+    fun `nao deve calcular frete quando CEP for vazio`() {
 
         // ação
         val error = assertThrows<StatusRuntimeException> {
@@ -87,7 +67,7 @@ class FretesEndpointTest(
     }
 
     @Test
-    fun `nao deve calcular CEP quando numero estiver em branco`() {
+    fun `nao deve calcular frete quando CEP for em branco`() {
 
         // ação
         val error = assertThrows<StatusRuntimeException> {
@@ -104,7 +84,29 @@ class FretesEndpointTest(
     }
 
     @Test
-    fun `nao deve calcular CEP quando numero nao encontrado`() {
+    fun `nao deve calcular frete quando CEP possuir caracteres nao-numericos`() {
+
+        // cenário
+        repository.save(Frete("60325010", BigDecimal("57.91")))
+        repository.save(Frete("61760000", BigDecimal("21.89")))
+        repository.save(Frete("60711180", BigDecimal("138.14")))
+
+        // ação
+        val error = assertThrows<StatusRuntimeException> {
+            grpcClient.calcula(
+                FreteRequest.newBuilder().setCep("61760-000").build()
+            )
+        }
+
+        // validação
+        with(error) {
+            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            assertEquals("CEP com formato inválido. Formato esperado: 99999999", status.description)
+        }
+    }
+
+    @Test
+    fun `nao deve calcular frete quando CEP nao encontrado`() {
 
         // cenário
         repository.save(Frete("60325010", BigDecimal("57.91")))
