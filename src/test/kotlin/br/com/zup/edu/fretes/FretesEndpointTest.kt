@@ -87,6 +87,23 @@ class FretesEndpointTest(
     }
 
     @Test
+    fun `nao deve calcular CEP quando numero estiver em branco`() {
+
+        // ação
+        val error = assertThrows<StatusRuntimeException> {
+            grpcClient.calcula(
+                FreteRequest.newBuilder().setCep("  ").build()
+            )
+        }
+
+        // validação
+        with(error) {
+            assertEquals(Status.INVALID_ARGUMENT.code, status.code)
+            assertEquals("CEP não informado", status.description)
+        }
+    }
+
+    @Test
     fun `nao deve calcular CEP quando numero nao encontrado`() {
 
         // cenário
