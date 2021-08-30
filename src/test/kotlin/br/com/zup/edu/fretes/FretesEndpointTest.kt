@@ -86,11 +86,6 @@ class FretesEndpointTest(
     @Test
     fun `nao deve calcular frete quando CEP possuir caracteres nao-numericos`() {
 
-        // cenário
-        repository.save(Frete("60325010", BigDecimal("57.91")))
-        repository.save(Frete("61760000", BigDecimal("21.89")))
-        repository.save(Frete("60711180", BigDecimal("138.14")))
-
         // ação
         val error = assertThrows<StatusRuntimeException> {
             grpcClient.calcula(
